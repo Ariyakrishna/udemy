@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  react-frontend:
+    image: react-f  # Use your React frontend image
+    ports:
+      - "3000:80"  # Map host port 3000 to container port 80
+    depends_on:
+      - node-backend
+
+  node-backend:
+    image: node-b  # Use your Node.js backend image
+    ports:
+      - "80:80"     # Map host port 80 to container port 80
+    depends_on:
+      - mongodb
+
+  mongodb:
+    image: mongo:4.4  # Use the official MongoDB image
+    ports:
+      - "27017:27017"  # Map host port 27017 to container port 27017
+    volumes:
+      - mongodb_data:/data/db  # Persist MongoDB data
+
+volumes:
+  mongodb_data:
