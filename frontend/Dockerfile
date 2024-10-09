@@ -1,11 +1,6 @@
-FROM node:14 as node 
-WORKDIR /app
-COPY package.json .
-RUN npm install 
-COPY . .
-RUN npm run build 
+FROM nginx:alpine
 
-FROM nginx:alpine 
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-COPY --from=node /app/build /usr/share/nginx/html
+COPY index.html /usr/share/nginx/html/index.html
+COPY script.js /usr/share/nginx/html/script.js
+
 EXPOSE 80

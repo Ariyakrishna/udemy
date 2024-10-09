@@ -1,26 +1,30 @@
 version: '3.8'
-
 services:
-  react-frontend:
-    image: udemy-react  # Use your React frontend image
-    ports:
-      - "3000:80"  # Map host port 3000 to container port 80
-    depends_on:
-      - node-backend
-
-  node-backend:
-    image: udemy-node  # Use your Node.js backend image
-    ports:
-      - "80:80"     # Map host port 80 to container port 80
-    depends_on:
-      - mongodb
-
-  mongodb:
-    image: mongo:4.4  # Use the official MongoDB image
-    ports:
-      - "27017:27017"  # Map host port 27017 to container port 27017
+  db:
+    image: mysql:5.7
+    environment:
+      MYSQL_ROOT_PASSWORD: example
+      MYSQL_DATABASE: simpledb
     volumes:
-      - mongodb_data:/data/db  # Persist MongoDB data
+      - db-data:/var/lib/mysql
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  backend:
+    build: ./backend
+    environment:
+      DB_HOST: db
+      DB_USER: root
+      DB_PASSWORD: example
+      DB_NAME: simpledb
+    depends_on:
+      - db
+    ports:
+      - "3000:3000"
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "80:80"
 
 volumes:
-  mongodb_data:
+  db-data:
