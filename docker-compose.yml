@@ -1,30 +1,42 @@
-version: '3.8'
+version: "3.8"
 services:
-  db:
-    image: mysql:5.7
-    environment:
-      MYSQL_ROOT_PASSWORD: example
-      MYSQL_DATABASE: simpledb
+  mongodb:
+    image: mongo
     volumes:
-      - db-data:/var/lib/mysql
-      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - data:/data/db
+    env_file:
+      - ./env/mongo.env
+    container_name: mongodb
 
   backend:
     build: ./backend
-    environment:
-      DB_HOST: db
-      DB_USER: root
-      DB_PASSWORD: example
-      DB_NAME: simpledb
-    depends_on:
-      - db
+    volumes:
+      - logs:/app/logs
+      - ./backend:/app
+      - /app/node_modules 
     ports:
-      - "3000:3000"
+      - '80:80'
+    env_file:
+      - ./env/backend.env 
+    depends_on:
+      - mongodb 
+    container_name: node-backend
 
   frontend:
     build: ./frontend
     ports:
-      - "80:80"
+      - '3000:3000'
+    volumes:
+      - ./frontend/src:/app/src 
+
+    stdin_open: true
+    tty: true
+    depends_on:
+      - backend
+    container_name: react-frontend
+
+  
 
 volumes:
-  db-data:
+  data:
+  logs:

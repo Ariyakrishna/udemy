@@ -1,0 +1,114 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongodb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongodb
+  template:
+    metadata:
+      labels:
+        app: mongodb
+    spec:
+      containers:
+      - name: mongodb
+        image: mongo:4.4
+        ports:
+        - containerPort: 27017
+        volumeMounts:
+        - mountPath: /data/db
+          name: mongodb-data
+      volumes:
+      - name: mongodb-data
+        emptyDir: {}  # Temporary storage for the database
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb
+spec:
+  type: ClusterIP
+  ports:
+  - port: 27017
+    targetPort: 27017
+  selector:
+    app: mongodb
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: node-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: node-backend
+  template:
+    metadata:
+      labels:
+        app: node-backend
+    spec:
+      containers:
+      - name: node-backend
+        image: node-image  # Your Node.js backend image
+        imagePullPolicy: IfNotPresent  # Use local image if available
+        ports:
+        - containerPort: 80
+        env:
+        - name: MONGODB_URI
+          value: mongodb://mongodb:27017  # Connection string for MongoDB
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: node-backend
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 80
+  selector:
+    app: node-backend
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: react-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: react-frontend
+  template:
+    metadata:
+      labels:
+        app: react-frontend
+    spec:
+      containers:
+      - name: react-frontend
+        image: react-image  # Your React frontend image
+        imagePullPolicy: IfNotPresent  # Use local image if available
+        ports:
+        - containerPort: 80
+        env:
+        - name: REACT_APP_BACKEND_URL
+          value: http://node-backend:80  # URL to access the Node.js backend
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: react-frontend
+spec:
+  type: NodePort
+  ports:
+  - port: 3000
+    targetPort: 80
+  selector:
+    app: react-frontend
