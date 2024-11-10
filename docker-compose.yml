@@ -1,42 +1,24 @@
-version: "3.8"
+version: '3'
 services:
-  mongodb:
+  mongo:
     image: mongo
-    volumes:
-      - data:/data/db
-    env_file:
-      - ./env/mongo.env
-    container_name: mongodb
-
-  backend:
-    build: ./backend
-    volumes:
-      - logs:/app/logs
-      - ./backend:/app
-      - /app/node_modules 
     ports:
-      - '80:80'
-    env_file:
-      - ./env/backend.env 
+      - "27017:27017"
+  
+  backend:
+    build:
+      context: ./backend
+    environment:
+      - MONGODB_URI=mongodb://mongo:27017/mydatabase
+    ports:
+      - "5000:5000"
     depends_on:
-      - mongodb 
-    container_name: node-backend
+      - mongo
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
     ports:
-      - '3000:3000'
-    volumes:
-      - ./frontend/src:/app/src 
-
-    stdin_open: true
-    tty: true
+      - "3000:3000"
     depends_on:
       - backend
-    container_name: react-frontend
-
-  
-
-volumes:
-  data:
-  logs:
